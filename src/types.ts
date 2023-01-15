@@ -1,3 +1,9 @@
+export enum PRODUCT {
+    CAMAS_E_TOCAS = "Camas e tocas",
+    TOYS = "Brinquedos",
+    SNACKS_AND_BONES = "Petiscos e ossos"
+}
+
 export type TUser = {
     id: string
     email: string
@@ -8,7 +14,7 @@ export type TProduct ={
     id: string
     name: string
     price: number
-    category: string
+    category: PRODUCT
 }
 
 export type TPurchase = {
