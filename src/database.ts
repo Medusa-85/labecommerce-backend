@@ -93,7 +93,7 @@ export const getProductById = (id: string) => {
 
 export const getProductByName = (name: string) => {
     const product = products.filter((product)=>(product.name.includes(name)))
-    console.log(`Busca pro nome`,product)
+    console.log(`Busca por nome`,product)
 }
 
 export const createNewPurchase = function(
