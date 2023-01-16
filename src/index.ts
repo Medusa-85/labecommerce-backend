@@ -8,10 +8,31 @@ import {
     getProductById, 
     getProductByName, 
     getPurchaseByUserId} from "./database";
+    import express, {Request, Response}  from "express";
+    import cors from "cors";
 
+// CRIAÇÃO DO SERVIDOR EXPRESS
+const app = express()
 
-console.log(getUsers())
-console.log(getAllProducts())
-console.log(getProductById("p002"))
-console.log(getProductByName("de"))
-console.log(getPurchaseByUserId("Su"))
+// CONFIGURAÇÃO QUE GARANTE AS RESPOSTAS SEMPRE NO FORMATO JSON
+app.use(express.json());
+
+// CONFIGURAÇÃO QUE HABILITA O CORS
+app.use(cors())
+
+app.listen(3003, () => {
+    console.log("Servidor rodando na porta 3003")
+})
+
+app.get("/users", (req: Request, res: Response) => {
+    res.status(200).send(getUsers());
+})
+
+app.get("/products", (req: Request, res: Response) => {
+    res.status(200).send(getAllProducts())
+})
+
+app.get("/products/search", (req: Request, res: Response) => {
+    const q = req.query.q
+    res.status(200).send(getProductByName("Caminha"))
+})
