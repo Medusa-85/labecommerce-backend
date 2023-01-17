@@ -101,4 +101,5 @@ VALUES ("p001", "Caminha pet tam. P", 120.45, "Camas e tocas"),
     --RETORNAR PRODUTOS COM PREÇO DENTRO DE UM INTERVALO
     SELECT*FROM products
     WHERE price>20 AND price<100
+    ORDER BY price ASC;
 
