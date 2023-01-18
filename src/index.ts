@@ -36,3 +36,4 @@ app.get("/products/search", (req: Request, res: Response) => {
     const q = req.query.q
     res.status(200).send(getProductByName("Caminha"))
 })
+
