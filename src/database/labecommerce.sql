@@ -103,3 +103,30 @@ VALUES ("p001", "Caminha pet tam. P", 120.45, "Camas e tocas"),
     WHERE price>20 AND price<100
     ORDER BY price ASC;
 
+-- RELAÇÕES SQL
+    --EXERCÍCIO 1
+    --CRIAÇÃO DA TABELA DE PEDIDOS (purchases)
+    CREATE TABLE purchases(
+        id TEXT PRIMARY KEY UNIQUE NOT NULL,
+        total_price REAL UNIQUE NOT NULL,
+        paid INTEGER NOT NULL,
+        delivered_at TEXT,
+        buyer_id TEXT NOT NULL,
+        FOREIGN KEY (buyer_id) REFERENCES users(id) --RELAÇÃO ENTRE AS TABELAS users E purchases
+    );
+    SELECT*FROM purchases;
+    INSERT INTO purchases (id, total_price, paid, buyer_id)
+    VALUES  ("pr005", 35.37, 0, "u001"),
+            ("pr006", 17.50, 0, "u001"),
+            ("pr007", 7.99 , 0, "u002"),
+            ("pr008", 19.90, 0,"u002");
+    UPDATE purchases
+    SET delivered_at = datetime()
+    WHERE id="pr006";
+    SELECT * FROM purchases
+    INNER JOIN users
+    ON purchases.buyer_id=users.id
+    WHERE users.id="u001";
+
+
+
