@@ -25,11 +25,11 @@ app.listen(3003, () => {
 })
 
 app.get("/users", (req: Request, res: Response) => {
-    res.status(200).send(getUsers());
+    res.status(200).send(users);
 })
 
 app.get("/products", (req: Request, res: Response) => {
-    res.status(200).send(getAllProducts())
+    res.status(200).send(products)
 })
 
 app.get("/products/search", (req: Request, res: Response) => {
