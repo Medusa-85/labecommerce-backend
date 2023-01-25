@@ -103,7 +103,7 @@ VALUES ("p001", "Caminha pet tam. P", 120.45, "Camas e tocas"),
     WHERE price>20 AND price<100
     ORDER BY price ASC;
 
--- RELAÇÕES SQL
+-- RELAÇÕES SQL I
     --EXERCÍCIO 1
     --CRIAÇÃO DA TABELA DE PEDIDOS (purchases)
     CREATE TABLE purchases(
@@ -128,5 +128,30 @@ VALUES ("p001", "Caminha pet tam. P", 120.45, "Camas e tocas"),
     ON purchases.buyer_id=users.id
     WHERE users.id="u001";
 
-
+--RELAÇÕES SQL II 
+    --EXERCÍCIO 1
+    --TABELA DE RELAÇÃO ENTRE PRODUTOS E PEDIDOS
+    CREATE TABLE purchases_products(
+        purchase_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        FOREIGN KEY (purchase_id) REFERENCES purchases(id),
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    );
+    DROP TABLE purchases_products;
+    SELECT *FROM purchases_products;
+    --EXERCÍCIO 2
+    --INSERÇÃO DE DADOS SIMULANDO 3 COMPRAS DE CLIENTES
+    INSERT INTO purchases_products(purchase_id, product_id, quantity)
+    VALUES ("pr001", "p001", 1),
+    ("pr001", "p007", 1),
+    ("pr003", "p008", 1),
+    ("pr003", "p009", 1);
+    --QUERY COM TODAS AS COLUNAS DAS TABELAS RELACIONADAS (purchase_products, purchases e products)
+    SELECT * FROM purchases
+    LEFT JOIN purchases_products
+    ON purchases_products.purchase_id = purchases.id
+    INNER JOIN products
+    ON purchases_products.product_id = products.id;
+    
 
