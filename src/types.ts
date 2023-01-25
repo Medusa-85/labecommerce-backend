@@ -17,6 +17,7 @@ export type TProduct ={
     category: PRODUCT
 }
 
+
 export type TPurchase = {
     userId: string
     productId: string
