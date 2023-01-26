@@ -2,15 +2,10 @@ import {
     users,
     products, 
     purchases, 
-    createNewUser, 
-    getUsers, 
-    getAllProducts, 
-    getProductById, 
-    getProductByName, 
-    getPurchaseByUserId} from "./database";
-    import express, {Request, Response}  from "express";
-    import cors from "cors";
-import { PRODUCT, TProduct, TPurchase } from "./types";
+    } from "./database";
+import express, {Request, Response}  from "express";
+import cors from "cors";
+import { TProduct } from "./types";
 
 // CRIAÇÃO DO SERVIDOR EXPRESS
 const app = express()
@@ -47,6 +42,12 @@ app.get("/purchases", (req: Request, res: Response) => {
 })
 
 //POST new user
+app.get("/products/search", (req: Request, res: Response) => {
+    const nameProduct = req.query.name as string
+    const filtro = products.filter((product) => product.name.includes(nameProduct) )
+    res.status(200).send(filtro)
+})
+
 app.post("/users", (req: Request, res: Response) => {
     const id = req.body.id
     const email = req.body.email
