@@ -5,7 +5,9 @@ import {
     } from "./database";
 import express, {Request, Response}  from "express";
 import cors from "cors";
-import { TProduct } from "./types";
+import { TProduct, TUser } from "./types";
+import { db } from "./database/knex";
+import { resourceLimits } from "worker_threads";
 
 // CRIAÇÃO DO SERVIDOR EXPRESS
 const app = express()
@@ -19,49 +21,107 @@ app.use(cors())
 app.listen(3003, () => {
     console.log("Servidor rodando na porta 3003")
 })
- //CRIAÇÃO DOS ENDPOINTS
-app.get("/users", (req: Request, res: Response) => {
-    res.status(200).send(users);
+
+//REFATORAÇÃO DOS ENDPOINTS COM IMPLEMENTAÇÃO DO BLOCO TRY/CATCH PARA CENTRALIZAÇÃO E MANIPULAÇÃO DOS ERROS 
+app.get("/users", async (req: Request, res: Response) => {
+    try{
+        const result = await db("users")
+        res.status(200).send(result)
+    }
+    catch(error: any){
+        console.log(error)
+        res.status(400).send(error.message)
+    }
+    
 })
 
-app.get("/products", (req: Request, res: Response) => {
-    res.status(200).send(products)
+app.get("/products", async (req: Request, res: Response) => {
+    try{
+        const result = await db("products")
+        res.status(200).send(result)
+    }
+    catch(error: any){
+        console.log(error)
+        res.status(400).send(error.message)
+    }
 })
 
-//GET products by id
-app.get("/products/:id", (req: Request, res: Response) => {
-    const searchProductById = req.query.q as string
-    const result: TProduct[] = products.filter(
-        (product) => product.id.toLowerCase().includes(searchProductById.toLowerCase())
-    )
-    res.status(200).send(result)
-})
-
-app.get("/purchases", (req: Request, res: Response) => {
-    res.status(200).send(purchases);
+//GET products by name
+app.get("/products/:name", async (req: Request, res: Response) => {
+    try{
+        const searchProduct = req.query.q as string
+        
+        if(searchProduct === undefined){
+            const result = await db("products")
+            console.log(result)
+            res.status(200).send(result)
+        } else {
+            const result = await db("products").where("name", "LIKE", `%${searchProduct}%`)
+            res.status(200).send(result)
+        }
+    }
+    catch(error: any){
+        console.log(error)
+        res.status(400).send(error.message)
+    }   
 })
 
 //POST new user
-app.get("/products/search", (req: Request, res: Response) => {
-    const nameProduct = req.query.name as string
-    const filtro = products.filter((product) => product.name.includes(nameProduct) )
-    res.status(200).send(filtro)
-})
+app.post("/users", async (req: Request, res: Response) => {
+    try{
+        const {id, email, password} = req.body
 
-app.post("/users", (req: Request, res: Response) => {
-    const id = req.body.id
-    const email = req.body.email
-    const password = req.body.password
-    const newUser = {
-        id,
-        email,
-        password
+        if (typeof id !== "string"){
+            res.status(400)
+            throw new Error("'id' deve ser string")
+        }
+
+        if (typeof email !== "string"){
+            res.status(400)
+            throw new Error("'email' deve ser string")
+        }
+
+        if (typeof password !== "string"){
+            res.status(400)
+            throw new Error("'password' deve ser string")
+        }
+
+        if (!password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,12}$/g)) {
+			throw new Error("'password' deve possuir entre 8 e 12 caracteres, com letras maiúsculas e minúsculas e no mínimo um número e um caractere especial")
+		}
+
+        const [idAlreadyExists]: TUser[] = await db("users").where({ id })
+
+        if (idAlreadyExists){
+            res.status(400)
+            throw new Error("'id' já existe")
+        }
+
+
+        const [emailAlreadyExists]: TUser[] = await db("users").where({ email }) 
+        if (emailAlreadyExists){
+            res.status(400)
+            throw new Error("'email' já existe")
+        }
+
+        const newUser: TUser = {
+            id,
+            email,
+            password
+        }
+
+        await db("users").insert(newUser)
+        res.status(201).send({ 
+            message: "Usuário cadastrado com sucesso", 
+            user: newUser
+        })
+
     }
-    users.push(newUser)
-    res.status(201).send({
-        message: "Cadastro realizado com sucesso",
-        user: newUser    
-    })
+    catch(error: any){
+        console.log(error)
+        res.status(400).send(error.message)
+    }
+    
 })
 
 //POST new product
@@ -160,6 +220,6 @@ app.put("/products/:id", (req: Request, res: Response) => {
         product.price = newPrice
         product.category = newCategory
     }
-    res.status(200).send("Produto atualizad com sucesso")
+    res.status(200).send("Produto atualizado com sucesso")
     
 })
