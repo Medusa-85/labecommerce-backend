@@ -5,7 +5,7 @@ import {
     } from "./database";
 import express, {Request, Response}  from "express";
 import cors from "cors";
-import { TProduct, TUser, TPurchase } from "./types";
+import { TProduct, TUser, TPurchase, PRODUCT } from "./types";
 import { db } from "./database/knex";
 import { resourceLimits } from "worker_threads";
 
@@ -22,7 +22,8 @@ app.listen(3003, () => {
     console.log("Servidor rodando na porta 3003")
 })
 
-//REFATORAÇÃO DOS ENDPOINTS COM IMPLEMENTAÇÃO DO BLOCO TRY/CATCH PARA CENTRALIZAÇÃO E MANIPULAÇÃO DOS ERROS 
+//REFATORAÇÃO DOS ENDPOINTS COM IMPLEMENTAÇÃO DA COMUNICAÇÃO ENTRE SERVIDOR E BANCO DE DADOS
+//GET all users
 app.get("/users", async (req: Request, res: Response) => {
     try{
         const result = await db("users")
@@ -35,6 +36,7 @@ app.get("/users", async (req: Request, res: Response) => {
     
 })
 
+//GET all products
 app.get("/products", async (req: Request, res: Response) => {
     try{
         const result = await db("products")
@@ -46,8 +48,20 @@ app.get("/products", async (req: Request, res: Response) => {
     }
 })
 
+//GET all purchases
+app.get("/purchases", async (req: Request, res: Response) => {
+    try{
+        const result = await db("purchases")
+        res.status(200).send(result)
+    }
+    catch(error: any){
+        console.log(error)
+        res.status(400).send(error.message)
+    }
+})
+
 //GET products by name
-app.get("/products/:name", async (req: Request, res: Response) => {
+app.get("/products/search", async (req: Request, res: Response) => {
     try{
         const searchProduct = req.query.q as string
                 
@@ -70,7 +84,7 @@ app.get("/products/:name", async (req: Request, res: Response) => {
 //POST new user
 app.post("/users", async (req: Request, res: Response) => {
     try{
-        const {id, email, password} = req.body
+        const {id, name, email, password} = req.body
 
         if (typeof id !== "string"){
             res.status(400)
@@ -80,6 +94,11 @@ app.post("/users", async (req: Request, res: Response) => {
         if (typeof email !== "string"){
             res.status(400)
             throw new Error("'email' deve ser string")
+        }
+
+        if (typeof name !== "string"){
+            res.status(400)
+            throw new Error("'name' deve ser string")
         }
 
         if (typeof password !== "string"){
@@ -107,6 +126,7 @@ app.post("/users", async (req: Request, res: Response) => {
 
         const newUser: TUser = {
             id,
+            name,
             email,
             password
         }
@@ -129,7 +149,7 @@ app.post("/users", async (req: Request, res: Response) => {
 app.post("/products", async (req: Request, res: Response) => {
     
     try{
-        const {id, name, price, category} = req.body
+        const {id, name, price, description, imageURL} = req.body
 
         if (typeof id !== "string"){
             res.status(400)
@@ -143,6 +163,14 @@ app.post("/products", async (req: Request, res: Response) => {
             res.status(400)
             throw new Error("'price' deve ser number")
         }
+        if (typeof description !== "string"){
+            res.status(400)
+            throw new Error("'description' deve ser string")
+        }
+        if (typeof imageURL !== "string"){
+            res.status(400)
+            throw new Error("'imageURL' deve ser string")
+        }
 
         const [idAlreadyExists]: TProduct[] = await db("products").where({ id })
 
@@ -155,7 +183,8 @@ app.post("/products", async (req: Request, res: Response) => {
             id,
             name,
             price, 
-            category
+            description,
+            imageURL
         }
 
         await db("products").insert(newProduct)
@@ -172,54 +201,36 @@ app.post("/products", async (req: Request, res: Response) => {
 })
 
 //POST new purchase
-app.post("/purchases", (req: Request, res: Response) => {
+app.post("/purchases", async (req: Request, res: Response) => {
     
     try{
-        const {userId, productId, quantity, totalPrice} = req.body
+        const {id, buyer, totalPrice, paid} = req.body
 
-        if (typeof userId !== "string"){
+        if (typeof id !== "string"){
             res.status(400)
             throw new Error("'id' deve ser string")
         }
-        if (typeof productId !== "string"){
+        if (typeof buyer !== "string"){
             res.status(400)
-            throw new Error("'productId' deve ser string")
-        }
-        if (typeof quantity !== "number"){
-            res.status(400)
-            throw new Error("'quantity' deve ser number")
+            throw new Error("'buyer' deve ser string")
         }
         if (typeof totalPrice !== "number"){
             res.status(400)
             throw new Error("'totalPrice' deve ser number")
         }
-
-        const userIdExistsInUsers = users.find((user)=>(user.id ===userId))
-        const product = products.find((product) => (product.id === productId))
-        
-        if (!userIdExistsInUsers){
+        if (typeof paid !== "number"){
             res.status(400)
-            throw new Error("'userId' não encontrado")
-        }
-        if (!product){
-            res.status(400)
-            throw new Error("'productId' não encontrado")
-        }
-        if(product !== undefined){
-            if (product.price * quantity !== totalPrice){
-                res.status(400)
-                throw new Error("'totalPrice' está incorreto")
-            }
+            throw new Error("'paid' deve ser number")
         }
         
         const newPurchase = {
-            userId,
-            productId,
-            quantity,
-            totalPrice
+            id,
+            buyer,
+            totalPrice,
+            paid
         }
 
-        purchases.push(newPurchase)
+        await db("purchases").insert(newPurchase)
         res.status(201).send({ 
             message: "Compra realizada com sucesso", 
             user: newPurchase
@@ -233,18 +244,20 @@ app.post("/purchases", (req: Request, res: Response) => {
 })
 
 //GET product by id
-app.get("/products/:id", (req: Request, res: Response) => {
+app.get("/products/:id", async (req: Request, res: Response) => {
     try{
-        const productId = req.query.q as string
-        const findProductId = products.filter((product) => product.id.includes(productId))
-        console.log(findProductId)
+        const productId = req.query.q as string | undefined
+        //const findProductId = products.find((product) => product.id.includes(productId))
+        const [productById] = await db("products").where("id", "LIKE", `${productId}`)
         
-        if(!findProductId){
+        console.log(productById)
+        
+        if(!productById){
             res.status(400)
             throw new Error("'produto' não encontrado")
-        } else {
-            res.status(200).send(findProductId)
         }
+            
+        res.status(200).send(productById)
     }
     catch(error: any){
         console.log(error)
@@ -253,20 +266,21 @@ app.get("/products/:id", (req: Request, res: Response) => {
 })
 
 //GET User Purchases by User id
-app.get("/users/:id/purchases", (req: Request, res: Response) => {
+app.get("/users/:id/purchases", async (req: Request, res: Response) => {
     try{
         const purchaseByUserId = req.query.id as string
-        const result = purchases.filter((purchase) => purchase.userId === purchaseByUserId)
+        //const result = purchases.filter((purchase) => purchase.id === purchaseByUserId)
+        const [userPurchaseByUserId] = await db("purchases").where("id", "LIKE", `${purchaseByUserId}`)
 
         console.log(purchaseByUserId)
-        console.log(result)
+        console.log(userPurchaseByUserId)
 
-        if(!result || result === undefined){
+        if(!userPurchaseByUserId || userPurchaseByUserId === undefined){
             res.status(400)
             throw new Error("Usuário não realizou nenhuma compra")
         }
         
-        res.status(200).send(result)
+        res.status(200).send(userPurchaseByUserId)
         
     }
     catch(error: any){
@@ -376,7 +390,7 @@ app.put("/products/:id", (req: Request, res: Response) => {
         const idToEdit = req.params.id
         const newName = req.body.name as string
         const newPrice = req.body.price as string
-        const newCategory = req.body.category 
+        const newDescription = req.body.description 
         const productToEdit = products.find((user) => user.id === idToEdit)
 
         if (typeof newName !== "string"){
@@ -395,7 +409,7 @@ app.put("/products/:id", (req: Request, res: Response) => {
         if(productToEdit) {
             productToEdit.name = newName
             productToEdit.price = newPrice
-            productToEdit.category = newCategory
+            productToEdit.description = newDescription
         }
         
         res.status(200).send("Produto atualizado com sucesso")

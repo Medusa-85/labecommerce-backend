@@ -3,16 +3,19 @@ import { TUser, TProduct, TPurchase , PRODUCT } from "./types";
 export const users: TUser[] = [
     {
         id: "Mariana",
+        name: "",
         email: "dev.mariana@email.com",
         password: "teste1234"
     },
     {
         id: "Sulamita",
+        name: "",
         email: "sukita@email.com",
         password: "sukete76"
     },
     {
         id: "Erica",
+        name: "",
         email: "ericadlima@email.com",
         password: "Miloca09"
     }
@@ -23,44 +26,41 @@ export const products: TProduct[] = [
         id: "p001",
         name: "Toca de gato",
         price: 100,
-        category: PRODUCT.CAMAS_E_TOCAS
+        description: PRODUCT.CAMAS_E_TOCAS,
+        imageURL: ""
     },
     {
         id: "p002",
         name: "Caminha de cachorro",
         price: 150,
-        category: PRODUCT.CAMAS_E_TOCAS
+        description: PRODUCT.CAMAS_E_TOCAS,
+        imageURL: ""
     },
 ]
 
 export const purchases: TPurchase[] = [
     {
-        userId: "Mariana",
-        productId: "p002",
-        quantity: 2,
-        totalPrice: 300
-    },
-    {
-        userId: "Sulamita",
-        productId: "p001",
-        quantity: 1,
-        totalPrice: 100
+        id: "",
+        buyer: "",
+        totalPrice: 2,
+        paid: 300
     },
 ]
 
 export const createNewUser = function(
     id: string,
+    name: string,
     email: string,
     password: string
 ): void {
     const newUser = {
         id,
+        name,
         email,
         password
     };
     users.push(newUser)
 }
-createNewUser("Maroca", "maroca85@email.com", "123456")
 
 export const getUsers = () => {
     console.log(`Todos os usuários:`, users)
@@ -70,17 +70,18 @@ export const createNewProduct = function(
     id: string,
     name: string,
     price: number,
-    category: PRODUCT
+    description: PRODUCT,
+    imageURL: ""
 ): void {
     const newProduct = {
         id,
         name,
         price,
-        category
+        description,
+        imageURL: ""
     };
     products.push(newProduct)
 }
-createNewProduct("p003","Cookie banana e aveia", 15, PRODUCT.SNACKS_AND_BONES)
 
 export const getAllProducts = () => {
     console.log(`Todos os produtos:`, products)
@@ -97,22 +98,22 @@ export const getProductByName = (name: string) => {
 }
 
 export const createNewPurchase = function(
-    userId: string,
-    productId: string,
-    quantity: number,
-    totalPrice: number
+    id: string,
+    buyer: string,
+    totalPrice: number,
+    paid: number
 ): void {
     const newPurchase = {
-        userId,
-        productId,
-        quantity,
-        totalPrice
+        id,
+        buyer,
+        totalPrice,
+        paid
     }; 
     purchases.push(newPurchase)
 }
 createNewPurchase("Mariana","p003",2,30)
 
 export const getPurchaseByUserId = (userId: string) => {
-    const purchaseByUser = purchases.filter((purchase)=>(purchase.userId.includes(userId)))
+    const purchaseByUser = purchases.filter((purchase)=>(purchase.id.includes("id")))
     console.log(`Compras deste usuário:`, purchaseByUser)
 }
