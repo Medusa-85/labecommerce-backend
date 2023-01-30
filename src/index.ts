@@ -420,3 +420,27 @@ app.put("/products/:id", (req: Request, res: Response) => {
         res.status(400).send(error.message)
     }
 })
+
+//APROFUNDAMENTO KNEX
+//EXERCÍCIO 1: TODOS OS ENDPOINTS ACIMA JÁ HAVIAM SIDO REFATORADOS DE ACORDO COM O ENUNCIADO (UTILIZANDO QUERY BUILDER)
+
+//EXERCÍCIO 2: Crie o seguinte endpoint com query builder:
+/*Get Purchase by id
+- method HTTP (GET)
+-path ("/purchases/:id")
+-response
+    status 200
+    um objeto contendo:
+        id da compra
+        valor total da compra
+        quando foi criada
+        status do pagamento
+        id de quem fez a compra
+        email de quem fez a compra
+        nome de quem fez a compra*/
+
+
+
+
+/*EXERCÍCIO 3: Refatore o endpoint criado no exercício anterior para que o resultado bem sucedido também 
+retorne a lista de produtos registrados na compra.*/
